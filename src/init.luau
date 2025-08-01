@@ -91,8 +91,6 @@ return table.freeze {
 				if content:sub(i, i + #word - 1) == word then
 					ok = true
 
-					print(word, i)
-
 					i += #word
 					output ..= REVERSE_LEXICON_MAPPING[word]
 
