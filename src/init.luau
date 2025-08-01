@@ -9,6 +9,16 @@ local function makeKeys<K, V>(input: { [K]: V }): { [V]: K }
 	return keys
 end
 
+local function toList<V>(input: { [any]: V }): { V }
+	local list = {}
+
+	for _, value in input do
+		table.insert(list, value)
+	end
+
+	return list
+end
+
 local INIT_PHRASE = "mrrp!"
 local CAT_LEXICON_MAPPING = {
 	["a"] = "mew",
@@ -43,6 +53,11 @@ local CAT_LEXICON_MAPPING = {
 	["?"] = "^__^",
 } :: { [string]: string }
 local REVERSE_LEXICON_MAPPING = makeKeys(CAT_LEXICON_MAPPING)
+local LEXICON_LIST = toList(CAT_LEXICON_MAPPING)
+
+table.sort(LEXICON_LIST, function(a: string, b: string)
+	return #a > #b
+end)
 
 local CONTENT_PATTERN = `^{INIT_PHRASE}%s*([^~]+)~$`
 
@@ -67,32 +82,28 @@ return table.freeze {
 		assert(content, "Invalid cat steganography!")
 
 		local output = ""
-		local window = ""
+		local i = 1
 
-		local function flush()
-			output ..= window
-			window = ""
-		end
+		while i <= #content do
+			local ok = false
 
-		for char in content:gmatch "." do
-			if char:match "%s" then
-				flush()
+			for _, word in LEXICON_LIST do
+				if content:sub(i, i + #word - 1) == word then
+					ok = true
 
-				continue
+					print(word, i)
+
+					i += #word
+					output ..= REVERSE_LEXICON_MAPPING[word]
+
+					break
+				end
 			end
 
-			window ..= char
-
-			local letter = REVERSE_LEXICON_MAPPING[window]
-
-			if letter then
-				window = letter
-
-				flush()
+			if not ok then
+				i += 1
 			end
 		end
-
-		flush()
 
 		return output
 	end,
